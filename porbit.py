@@ -43,16 +43,24 @@ for xx in np.linspace(-plotextent, plotextent, int(round(2.*plotextent/tickspaci
 for yy in np.linspace(-plotextent, plotextent, int(round(2.*plotextent/tickspacing+1))):
     pygame.draw.line(background, grey, plot2screen((-halftick, yy)), plot2screen((halftick, yy)), 1)
 
-### PARAMETERS TO FIDDLE WITH ###
-x = (0.0, 0.0)
-p = (1.2, 0.7)
-dt = 0.001
-q = 0.9
-update_every = 50
-#################################
+params = np.loadtxt("porbit_init.dat", dtype=str, delimiter="$$$")
+for param in params:
+   psplit = param.split("=")
+   key = psplit[0].replace(" ", "")
+   val = psplit[1].replace(" ", "")
+   if key == "x": xpos = float(val)
+   elif key == "y": ypos = float(val)
+   elif key == "xvel": xvel = float(val)
+   elif key == "yvel": yvel = float(val)
+   elif key == "dt": dt = float(val)
+   elif key == "q": q = float(val)
+   elif key == "speed": update_every = int(val)
+x = (xpos, ypos)
+p = (xvel, yvel)
 
 time = 0.
 screen.blit(background, (0,0))
+running = True
 while 1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
@@ -60,14 +68,22 @@ while 1:
             if (event.key == pygame.K_ESCAPE or event.key == pygame.K_q):
                 pygame.quit()
                 sys.exit()
+            if event.key == pygame.K_SPACE:
+                if running: running = False
+                else: running = True
+            if event.key == pygame.K_UP:
+                update_every += 10
+            if event.key == pygame.K_DOWN:
+                if update_every > 10:
+                    update_every -= 10
+                else:
+                    update_every = 1
 
-    #prev_x = tuple(x)
-
-    for ii in range(update_every):
-        prev_x = tuple(x)
-        x, p = bl.sia4(x, p, time, dt, 2, q)
-        time += dt
-
-        pygame.draw.line(screen, white, plot2screen(prev_x), plot2screen(x), 1)
+    if running:
+        for ii in range(update_every):
+            prev_x = tuple(x)
+            x, p = bl.sia4(x, p, time, dt, 2, q)
+            time += dt
+            pygame.draw.line(screen, white, plot2screen(prev_x), plot2screen(x), 1)
 
     pygame.display.flip()
