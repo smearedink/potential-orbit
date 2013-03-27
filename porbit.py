@@ -43,13 +43,15 @@ for xx in np.linspace(-plotextent, plotextent, int(round(2.*plotextent/tickspaci
 for yy in np.linspace(-plotextent, plotextent, int(round(2.*plotextent/tickspacing+1))):
     pygame.draw.line(background, grey, plot2screen((-halftick, yy)), plot2screen((halftick, yy)), 1)
 
+### PARAMETERS TO FIDDLE WITH ###
 x = (0.4, 0.0)
 p = (0.1, 0.5)
 dt = 0.001
 q = 1.
-time = 0.
 update_every = 100
+#################################
 
+time = 0.
 screen.blit(background, (0,0))
 while 1:
     for event in pygame.event.get():
