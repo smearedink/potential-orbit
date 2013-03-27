@@ -69,7 +69,7 @@ def force(i, x, q):
     factor = rc*rc + x[0]*x[0] + x[1]*x[1]/(q*q)
     factor = vo*vo/factor
     if i == 0: outforce = -x[0]*factor
-    elif i == 1: outforce = -x[1]*factor
+    elif i == 1: outforce = -x[1]*factor/(q*q)
 
     return outforce
 

@@ -44,11 +44,11 @@ for yy in np.linspace(-plotextent, plotextent, int(round(2.*plotextent/tickspaci
     pygame.draw.line(background, grey, plot2screen((-halftick, yy)), plot2screen((halftick, yy)), 1)
 
 ### PARAMETERS TO FIDDLE WITH ###
-x = (0.4, 0.0)
-p = (0.1, 0.5)
+x = (0.0, 0.0)
+p = (1.2, 0.7)
 dt = 0.001
-q = 1.
-update_every = 100
+q = 0.9
+update_every = 50
 #################################
 
 time = 0.
