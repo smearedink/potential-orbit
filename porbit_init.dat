@@ -5,11 +5,11 @@
 x = 0.4
 y = 0.0
 xvel = 0.0
-yvel = 0.8
+yvel = 0.5
 
 # time step and potential asymmetry
 dt = 0.001
-q = 0.9
+q = 0.8
 
 # the speed is just an integer telling pygame how many frames to calculate
 # before updating the screen: 1 is slowest, higher numbers are faster

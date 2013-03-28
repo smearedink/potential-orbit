@@ -15,3 +15,5 @@ Controls:
  SPACEBAR: pause
 
  UP/DOWN ARROWS: speed up or slow down simulation
+
+ C: clear trails

@@ -78,6 +78,8 @@ while 1:
                     update_every -= 10
                 else:
                     update_every = 1
+            if event.key == pygame.K_c:
+                screen.blit(background, (0,0))
 
     if running:
         for ii in range(update_every):
