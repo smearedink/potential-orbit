@@ -54,6 +54,70 @@ def orbit(x0, p0, q=0.9, dt=0.001, maxtime=2.*np.pi, record_every=1):
 
     return results_arr.transpose()
 
+def surfsect(esurf=0.5, q=0.9, dt=0.001, dx=0.2, maxtime=2.*np.pi):
+    """
+    esurf: energy for this surface of section
+     q: asymmetry parameter for potential
+    dt: time step (orbital period = 2pi)
+    dx: size of change in x between each contour of the surface
+    maxtime: total integration time
+
+    returns x and xdot coordinates for plotting a surface of section
+
+    NOTE: this could be generalized to more than 2 degrees of freedom, but
+     for now ndegfr is set to 2
+    """
+    ndegfr = 2
+
+    xmax = np.sqrt(np.exp(2.*esurf)-(0.15*0.15))
+    xstart = xmax - 0.0000001
+
+    time_output = []
+    energy_output = []
+    energy_err_output = []
+    x_output = []
+    xdot_output = []
+
+    while xstart > -xmax:
+
+        x = np.array([xstart, 0.0])
+        p = np.array([0.0, np.sqrt(2.*esurf-np.log(0.15*0.15+x[0]*x[0]))])
+
+        lasty = -1.0
+
+        # Evaluate the initial energy
+        e0 = get_energy(x, p, q)
+
+        # Reset time to zero
+        time = 0.0
+
+        while time < maxtime:
+            if p[1] > 0.0 and x[1]*lasty < 0.0:
+                time_output.append(time)
+                energy = get_energy(x, p, q)
+                energy_output.append(energy)
+                energy_err_output.append((energy-e0)/e0)
+                x_output.append(x[0])
+                xdot_output.append(p[0])
+            lasty = x[1]
+            x, p = sia4(x, p, time, dt, ndegfr, q)
+            time += dt
+
+        xstart = xstart - dx
+        print "new xstart:", xstart
+
+#        results_arr = [np.array(time_output), np.array(energy_output),\
+#            np.array(energy_err_output)]
+#        pos = np.array(pos_output)
+#        for i in range(ndegfr):
+#            results_arr.append(pos[:,i])
+#        results_arr = np.array(results_arr)
+
+    results_arr = np.array([np.array(time_output), np.array(energy_output),\
+        np.array(energy_err_output), np.array(x_output), np.array(xdot_output)])
+
+    return results_arr.transpose()
+
 # Momentum gradient function
 # For any quadratic kinetic energy, unit mass
 def gradt(i, p):
