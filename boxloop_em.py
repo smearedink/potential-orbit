@@ -54,12 +54,17 @@ def orbit(x0, p0, q=0.9, dt=0.001, maxtime=2.*np.pi, record_every=1):
 
     return results_arr.transpose()
 
-def surfsect(esurf=0.5, q=0.9, dt=0.001, dx=0.2, maxtime=2.*np.pi):
+def surfsect(x0=None, xdot0=0.0, esurf=0.5, q=0.9, dt=0.001, dx=-0.2, dxdot=0.0, nsteps=None, maxtime=2.*np.pi):
     """
+    x0: starting x,y position (if None, will choose point at far positive edge)
+    xdot0: starting x velocity
     esurf: energy for this surface of section
      q: asymmetry parameter for potential
     dt: time step (orbital period = 2pi)
-    dx: size of change in x between each contour of the surface
+    dx: size of change in x position between each contour of the surface
+    dxdot: size of change in x velocity between each contour of the surface
+    nsteps: number of steps to take (if None, will go until energetically
+        impossible)
     maxtime: total integration time
 
     returns x and xdot coordinates for plotting a surface of section
@@ -78,10 +83,18 @@ def surfsect(esurf=0.5, q=0.9, dt=0.001, dx=0.2, maxtime=2.*np.pi):
     x_output = []
     xdot_output = []
 
-    while xstart > -xmax:
+    if x0 is not None: xstart = x0
+    xdot = xdot0
+    #p = np.array([xdot, ydot])
+
+    running = True
+    count = 0
+    while running:
+    #while xstart > -xmax:
 
         x = np.array([xstart, 0.0])
-        p = np.array([0.0, np.sqrt(2.*esurf-np.log(0.15*0.15+x[0]*x[0]))])
+        ydot = np.sqrt(2.*esurf-xdot*xdot-np.log(0.15*0.15+x[0]*x[0]))
+        p = np.array([xdot, ydot])
 
         lasty = -1.0
 
@@ -90,6 +103,10 @@ def surfsect(esurf=0.5, q=0.9, dt=0.001, dx=0.2, maxtime=2.*np.pi):
 
         # Reset time to zero
         time = 0.0
+
+        print count
+        print "xstart:", xstart
+        print "xdot:", xdot
 
         while time < maxtime:
             if p[1] > 0.0 and x[1]*lasty < 0.0:
@@ -103,15 +120,13 @@ def surfsect(esurf=0.5, q=0.9, dt=0.001, dx=0.2, maxtime=2.*np.pi):
             x, p = sia4(x, p, time, dt, ndegfr, q)
             time += dt
 
-        xstart = xstart - dx
-        print "new xstart:", xstart
-
-#        results_arr = [np.array(time_output), np.array(energy_output),\
-#            np.array(energy_err_output)]
-#        pos = np.array(pos_output)
-#        for i in range(ndegfr):
-#            results_arr.append(pos[:,i])
-#        results_arr = np.array(results_arr)
+        xstart += dx
+        xdot += dxdot
+        count += 1
+        if nsteps is not None and count >= nsteps:
+            running = False
+        elif x[0] <= -xmax:
+            running = False
 
     results_arr = np.array([np.array(time_output), np.array(energy_output),\
         np.array(energy_err_output), np.array(x_output), np.array(xdot_output)])

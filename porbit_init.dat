@@ -2,16 +2,18 @@
 # Make sure all parameters are present, except only one of either yvel or energy# --blank lines and comments are ignored
 
 # position and velocity (or energy instead of yvel)
-x = 1.
+x = 1.0
 y = 0.0
 xvel = 0.0
 #yvel = 0.8
-energy = 0.1
+energy = 0.2
 
 # time step and potential asymmetry
-dt = 0.001
+dt = 0.005
 q = 0.55
 
 # the speed is just an integer telling pygame how many frames to calculate
 # before updating the screen: 1 is slowest, higher numbers are faster
-speed = 30
+speed = 6
+# this is how much the speed changes by when up/down arrows are pressed
+speed_increment = 5

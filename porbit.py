@@ -33,16 +33,35 @@ def plot2screen((x, y), size, plotextents):
 black = 0, 0, 0
 grey = 80, 80, 80
 white = 255, 255, 255
+yellow = 255, 255, 0
+magenta = 255, 0, 255
+
+params = np.loadtxt("porbit_init.dat", dtype=str, delimiter="$$$")
+for param in params:
+    psplit = param.split("=")
+    key = psplit[0].replace(" ", "")
+    val = psplit[1].replace(" ", "")
+    if key == "x": xpos = float(val)
+    elif key == "y": ypos = float(val)
+    elif key == "xvel": xvel = float(val)
+    elif key == "yvel": yvel = float(val)
+    elif key == "dt": dt = float(val)
+    elif key == "q": q = float(val)
+    elif key == "speed": update_every = int(val)
+    elif key == "speed_increment": speed_increment = int(val)
+    elif key == "energy":
+        en = float(val)
+        yvel = np.sqrt(2.*en-xvel*xvel-np.log(0.15*0.15+xpos*xpos))        
+x = (xpos, ypos)
+p = (xvel, yvel)
 
 screen = pygame.display.set_mode(size)
 
 background = pygame.Surface(size)
 background.fill(black)
 
-orbit_box = pygame.Surface(box_size)
-pygame.draw.rect(orbit_box, white, [0,0,box_w,box_h], 1)
-sect_box = pygame.Surface(box_size)
-pygame.draw.rect(sect_box, white, [0,0,box_w,box_h], 1)
+orbit_box_bg = pygame.Surface(box_size)
+sect_box_bg = pygame.Surface(box_size)
 
 def draw_axes(surface, plotextents):
     pygame.draw.line(surface, grey, (0, box_h/2), (box_w, box_h/2), 1)
@@ -60,32 +79,36 @@ def draw_axes(surface, plotextents):
             box_size, plotextents), plot2screen((halftick, yy), box_size,\
             plotextents), 1)
 
-draw_axes(orbit_box, orbit_ext)
-draw_axes(sect_box, sect_ext)
+def potential(x, y, q):
+    return 0.5*np.log(0.15*0.15+x*x+y*y/(q*q))
 
-params = np.loadtxt("porbit_init.dat", dtype=str, delimiter="$$$")
-for param in params:
-    psplit = param.split("=")
-    key = psplit[0].replace(" ", "")
-    val = psplit[1].replace(" ", "")
-    if key == "x": xpos = float(val)
-    elif key == "y": ypos = float(val)
-    elif key == "xvel": xvel = float(val)
-    elif key == "yvel": yvel = float(val)
-    elif key == "dt": dt = float(val)
-    elif key == "q": q = float(val)
-    elif key == "speed": update_every = int(val)
-    elif key == "energy":
-        en = float(val)
-        yvel = np.sqrt(2.*en-np.log(0.15*0.15+xpos*xpos))        
-x = (xpos, ypos)
-p = (xvel, yvel)
+xg, yg = np.meshgrid(np.linspace(-orbit_ext[0], orbit_ext[0], width/2), np.linspace(-orbit_ext[1], orbit_ext[1], height))
+# create grid that varies between 0 and <255 (ie, still grey at max)
+potl = potential(xg, yg, q)
+potl -= np.min(potl)
+potl /= np.max(potl)
+potl *= 100
+potl = 100 - potl
+potl = np.transpose(np.round(potl).astype(int))
+
+#draw_axes(orbit_box_bg, orbit_ext)
+pygame.surfarray.blit_array(orbit_box_bg, np.dstack((potl,potl,potl)))
+draw_axes(sect_box_bg, sect_ext)
+
+pygame.draw.rect(orbit_box_bg, white, [0,0,box_w,box_h], 1)
+pygame.draw.rect(sect_box_bg, white, [0,0,box_w,box_h], 1)
+
+orbit_box = pygame.Surface(size)
+orbit_box.blit(orbit_box_bg, (0,0))
+sect_box = pygame.Surface(size)
+sect_box.blit(sect_box_bg, (0,0))
 
 time = 0.
 screen.blit(background, (0,0))
 screen.blit(orbit_box, (0,0))
 screen.blit(sect_box, (width/2,0))
 running = True
+trails = True
 while 1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
@@ -97,23 +120,34 @@ while 1:
                 if running: running = False
                 else: running = True
             if event.key == pygame.K_UP:
-                update_every += 10
+                update_every += speed_increment
             if event.key == pygame.K_DOWN:
-                if update_every > 10:
-                    update_every -= 10
+                if update_every > speed_increment:
+                    update_every -= speed_increment
                 else:
                     update_every = 1
             if event.key == pygame.K_c:
-                screen.blit(orbit_box, (0,0))
+                orbit_box.blit(orbit_box_bg, (0,0))
+            if event.key == pygame.K_t:
+                if trails:
+                    trails = False
+                    orbit_box.blit(orbit_box_bg, (0,0))
+                else: trails = True
 
     if running:
         for ii in range(update_every):
             prev_x = tuple(x)
             x, p = bl.sia4(x, p, time, dt, 2, q)
             time += dt
-            pygame.draw.line(screen, white, plot2screen(prev_x, box_size, orbit_ext), plot2screen(x, box_size, orbit_ext), 1)
+            screen_x = plot2screen(x, box_size, orbit_ext)
+            if trails:
+                pygame.draw.line(orbit_box, white, plot2screen(prev_x, box_size, orbit_ext), screen_x, 1)
+            screen.blit(orbit_box, (0,0))
+            pygame.draw.circle(screen, magenta, screen_x, 4)
             if p[1] > 0. and x[1]*prev_x[1] <= 0.:
-                sect_box.set_at(plot2screen((x[0],p[0]), box_size, sect_ext), white)
-                screen.blit(sect_box, (width/2,0))
+                #sect_box.set_at(plot2screen((x[0],p[0]), box_size, sect_ext), white)
+                screen_coords = plot2screen((x[0],p[0]), box_size, sect_ext)
+                pygame.draw.rect(sect_box, white, [screen_coords[0], screen_coords[1], 2, 2], 1)
+            screen.blit(sect_box, (width/2,0))
 
     pygame.display.flip()
