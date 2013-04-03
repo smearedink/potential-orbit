@@ -63,18 +63,20 @@ background.fill(black)
 orbit_box_bg = pygame.Surface(box_size)
 sect_box_bg = pygame.Surface(box_size)
 
+# This seems to draw ticks or not depending upon the plotextents input, but
+# not according to any logic I can discern
 def draw_axes(surface, plotextents):
     pygame.draw.line(surface, grey, (0, box_h/2), (box_w, box_h/2), 1)
     pygame.draw.line(surface, grey, (box_w/2, 0), (box_w/2, box_h), 1)
     halftick = 0.002
     tickspacing = 0.1
     for xx in np.linspace(-plotextents[0], plotextents[0],\
-        int(round(2.*plotextents[0]/tickspacing+1))):
+        int(round(2.*plotextents[0]/tickspacing+1.))):
         pygame.draw.line(surface, grey, plot2screen((xx, -halftick),\
             box_size, plotextents), plot2screen((xx, halftick), box_size,\
             plotextents), 1)
     for yy in np.linspace(-plotextents[1], plotextents[1],\
-        int(round(2.*plotextents[1]/tickspacing+1))):
+        int(round(2.*plotextents[1]/tickspacing+1.))):
         pygame.draw.line(surface, grey, plot2screen((-halftick, yy),\
             box_size, plotextents), plot2screen((halftick, yy), box_size,\
             plotextents), 1)
@@ -133,6 +135,25 @@ while 1:
                     trails = False
                     orbit_box.blit(orbit_box_bg, (0,0))
                 else: trails = True
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                sect_x = event.pos[0] - width/2
+                sect_y = event.pos[1]
+                sect_co = screen2plot((sect_x, sect_y), box_size, sect_ext)
+                if (sect_co[0] > -sect_ext[0])\
+                    and (sect_co[0] < sect_ext[0])\
+                    and (sect_co[1] > -sect_ext[1])\
+                    and (sect_co[1] < sect_ext[1]):
+                    xpos = sect_co[0]
+                    xvel = sect_co[1]
+                    yvelsq = 2.*en-xvel*xvel-np.log(0.15*0.15+xpos*xpos)
+                    if yvelsq < 0:
+                        print "You are trying to select an x,xdot pair that is inaccessible at the current energy."
+                    else:
+                        x = (xpos, 0.)
+                        prev_x = tuple(x)
+                        p = (xvel, np.sqrt(yvelsq))
+                        orbit_box.blit(orbit_box_bg, (0,0))
 
     if running:
         for ii in range(update_every):

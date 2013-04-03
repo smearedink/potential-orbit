@@ -22,3 +22,4 @@ Controls:
 
  T: turn trails off/on entirely
 
+Click on the surface of section to switch to a different orbit with the same energy.  Cool!
