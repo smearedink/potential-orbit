@@ -63,22 +63,22 @@ background.fill(black)
 orbit_box_bg = pygame.Surface(box_size)
 sect_box_bg = pygame.Surface(box_size)
 
-# This seems to draw ticks or not depending upon the plotextents input, but
-# not according to any logic I can discern
 def draw_axes(surface, plotextents):
     pygame.draw.line(surface, grey, (0, box_h/2), (box_w, box_h/2), 1)
     pygame.draw.line(surface, grey, (box_w/2, 0), (box_w/2, box_h), 1)
-    halftick = 0.002
+    halftick_pixels = 2
+    halftick_x = halftick_pixels * 2.*plotextents[1]/box_h
+    halftick_y = halftick_pixels * 2.*plotextents[0]/box_w
     tickspacing = 0.1
     for xx in np.linspace(-plotextents[0], plotextents[0],\
         int(round(2.*plotextents[0]/tickspacing+1.))):
-        pygame.draw.line(surface, grey, plot2screen((xx, -halftick),\
-            box_size, plotextents), plot2screen((xx, halftick), box_size,\
+        pygame.draw.line(surface, grey, plot2screen((xx, -halftick_x),\
+            box_size, plotextents), plot2screen((xx, halftick_x), box_size,\
             plotextents), 1)
     for yy in np.linspace(-plotextents[1], plotextents[1],\
         int(round(2.*plotextents[1]/tickspacing+1.))):
-        pygame.draw.line(surface, grey, plot2screen((-halftick, yy),\
-            box_size, plotextents), plot2screen((halftick, yy), box_size,\
+        pygame.draw.line(surface, grey, plot2screen((-halftick_y, yy),\
+            box_size, plotextents), plot2screen((halftick_y, yy), box_size,\
             plotextents), 1)
 
 def potential(x, y, q):
